@@ -6,7 +6,7 @@ import store from './store'
 import Vant from 'vant'
 import 'vant/lib/index.css'
 import 'amfe-flexible/index.min.js'
-
+import '@/utils/validate.js' // 验证相关
 import '@/assets/css/global.css'
 Vue.use(Vant)
 Vue.config.productionTip = false
