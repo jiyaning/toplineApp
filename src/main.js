@@ -13,6 +13,13 @@ Vue.use(Lazyload) // 注册懒加载指令
 Vue.use(Vant)
 Vue.config.productionTip = false
 
+import * as filters from '@/utils/filters' // 过滤器
+
+// 注册全局过滤器
+Object.keys(filters).forEach(item => {
+    Vue.filter(item, filters[item])
+})
+
 // 创建一个延迟器，
 // 给Vue增加继承成员，名称$sleep，
 Vue.prototype.$sleep = time => {

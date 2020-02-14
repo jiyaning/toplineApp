@@ -12,7 +12,7 @@
             <p>
               <span>作者:{{item.aut_name}}</span>
               <span class="spanspace">评论:{{item.comm_count}}</span>
-              <span>时间:{{item.pubdate}}</span>
+              <span>时间:{{item.pubdate |formatTime}}</span>
             </p>
           </template>
         </van-cell>
