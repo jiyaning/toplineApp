@@ -6,10 +6,16 @@
           <template slot="label">
             <van-grid v-if="item.cover.type>0" :column-num="item.cover.type" :border="false">
               <van-grid-item v-for="(item2,key2) in item.cover.images" :key="key2">
-                <van-image width="90" height="90" :src="item2" lazy-load/>
+                <van-image width="90" height="90" :src="item2" lazy-load />
               </van-grid-item>
             </van-grid>
             <p>
+              <van-icon
+                name="close"
+                style="float:right"
+                size="16"
+                @click="displayDialog()"
+              />
               <span>作者:{{item.aut_name}}</span>
               <span class="spanspace">评论:{{item.comm_count}}</span>
               <span>时间:{{item.pubdate |formatTime}}</span>
@@ -18,13 +24,18 @@
         </van-cell>
       </van-list>
     </van-pull-refresh>
+    <com-moreaction v-model="showDialog"></com-moreaction>
   </div>
 </template>
 
 <script>
+import ComMoreaction from './com-moreaction.vue'
 import { apiArticleList } from '@/api/article.js'
 export default {
   name: 'com-article',
+  components: {
+    ComMoreaction
+  },
   props: {
     channelId: {
       type: Number,
@@ -37,10 +48,14 @@ export default {
       finished: false,
       isLoading: false,
       articleList: [],
-      ts: Date.now()
+      ts: Date.now(),
+      showDialog: false
     }
   },
   methods: {
+    displayDialog () {
+      this.showDialog = true
+    },
     async getArticleList () {
       const result = await apiArticleList({
         channel_id: this.channelId,
@@ -81,7 +96,7 @@ export default {
   height: 100%;
   overflow-y: auto;
 }
-.spanspace{
-margin:0 16px
+.spanspace {
+  margin: 0 20px;
 }
 </style>
