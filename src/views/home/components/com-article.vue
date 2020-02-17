@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <van-pull-refresh v-model="isLoading" @refresh="onRefresh">
+  <div class="scroll-wrapper">
+    <van-pull-refresh v-model="isLoading" @refresh="onRefresh" :success-text='downSuccessText' success-duration='800'>
       <van-list v-model="loading" :finished="finished" finished-text="没有更多了" @load="onLoad">
         <van-cell v-for="item in articleList" :key="item.art_id.toString()" :title="item.title">
           <template slot="label">
@@ -14,7 +14,7 @@
                 name="close"
                 style="float:right"
                 size="16"
-                @click="displayDialog()"
+                @click="displayDialog(item.art_id.toString())"
               />
               <span>作者:{{item.aut_name}}</span>
               <span class="spanspace">评论:{{item.comm_count}}</span>
@@ -24,7 +24,7 @@
         </van-cell>
       </van-list>
     </van-pull-refresh>
-    <com-moreaction v-model="showDialog"></com-moreaction>
+    <com-moreaction v-model="showDialog" :articleID='nowArticleID' @dislikeSuccess='handelDislikeSuccess()'></com-moreaction>
   </div>
 </template>
 
@@ -49,12 +49,21 @@ export default {
       isLoading: false,
       articleList: [],
       ts: Date.now(),
-      showDialog: false
+      showDialog: false,
+      nowArticleID: '',
+      downSuccessText: ''
     }
   },
   methods: {
-    displayDialog () {
+    handelDislikeSuccess () {
+      const index = this.articleList.findIndex(item =>
+        item.art_id.toString() === this.nowArticleID
+      )
+      this.articleList.splice(index, 1)
+    },
+    displayDialog (id) {
       this.showDialog = true
+      this.nowArticleID = id
     },
     async getArticleList () {
       const result = await apiArticleList({
@@ -63,12 +72,22 @@ export default {
       })
       return result
     },
-    onRefresh () {
-      setTimeout(() => {
-        this.$toast('刷新成功')
-        this.isLoading = false
-      }, 1000)
+    // 下拉更新文章
+    async  onRefresh () {
+      await this.$sleep(800) // 该延迟器要执行0.8秒
+      const articles = await this.getArticleList()
+      if (articles.results.length > 0) {
+        // 更新时间戳
+        this.ts = articles.pre_timestamp
+        this.articleList.unshift(...articles.results)
+        this.downSuccessText = '文章更新成功'
+      } else {
+        this.downSuccessText = '文章已经是最新的'
+      }
+      // 加载状态结束
+      this.isLoading = false
     },
+    // 上拉加载更多文章
     async onLoad () {
       // 应用延迟器，使得执行速度减慢
       await this.$sleep(800) // 该延迟器要执行0.8秒
@@ -84,7 +103,7 @@ export default {
         this.finished = true
       }
       // 加载状态结束
-      this.loading = false
+      this.isLoading = false
     }
   }
 }
