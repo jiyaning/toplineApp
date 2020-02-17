@@ -15,17 +15,17 @@
           <span class="desc">点击进入频道</span>
         </div>
         <div>
-          <van-button type="danger" plain size="mini" round>编辑</van-button>
+          <van-button type="danger" plain size="mini" round @click="isEdit=!isEdit">{{isEdit?'完成':'编辑'}}</van-button>
         </div>
       </div>
       <!--van-grid 没有设置column-num属性，默认是4列-->
       <van-grid class="channel-content" :gutter="10" clickable>
-        <van-grid-item v-for="(item,k) in channelList" :key="item.id">
+        <van-grid-item v-for="(item,k) in channelList" :key="item.id"  @click="clkChannel(item.id,k)">
           <span class="text"
             :style="{color:k===activeChannelIndex?'red':''}">
             {{item.name}}
           </span>
-          <!-- <van-icon class="close-icon" name="close" /> -->
+          <van-icon v-show="isEdit && k>0" class="close-icon" name="close"  @click="userToRest(item.id,k)"/>
         </van-grid-item>
       </van-grid>
     </div>
@@ -38,7 +38,7 @@
         </div>
       </div>
       <van-grid class="channel-content" :gutter="10" clickable>
-        <van-grid-item v-for="item in restChannel" :key="item.id" >
+        <van-grid-item v-for="item in restChannel" :key="item.id" @click="restToUser(item)">
           <div class="info">
             <span class="text">{{item.name}}</span>
           </div>
@@ -50,7 +50,7 @@
 
 <script>
 // 获得所有频道的api函数
-import { apiChannelAll } from '@/api/channel.js'
+import { apiChannelAll, apiChannelList, apiChannelAdd, apiChannelDel } from '@/api/channel.js'
 
 export default {
   name: 'com-channel',
@@ -88,7 +88,8 @@ export default {
   data () {
     return {
       // 全部频道
-      channelAll: []
+      channelAll: [],
+      isEdit: false
     }
   },
   created () {
@@ -101,6 +102,30 @@ export default {
       const result = await apiChannelAll()
       // data接收
       this.channelAll = result.channels
+    },
+    restToUser (channel) {
+      this.channelList.push(channel)
+      // 2. localStorage持久更新
+      apiChannelAdd(channel)
+    },
+    userToRest (channelID, index) {
+      this.channelList.splice(index, 1)
+      apiChannelDel(channelID)
+      if (this.channelList.length === index) {
+        this.$emit('update:activeChannelIndex', index - 1)
+      }
+    },
+    clkChannel (channelID, index) {
+      if (this.isEdit && index > 0) {
+        this.userToRest(channelID, index)
+        return false // 停止后续代码执行
+      }
+
+      // 1. 频道弹出层消失
+      this.$emit('input', false)
+      // 2. home/index.vue页面要"激活"当前单击到的频道并展示
+      // 修改 activeChannelIndex的值为 index 即可(就是子组件修改父组件传递的变量)
+      this.$emit('update:activeChannelIndex', index)
     }
   }
 }
